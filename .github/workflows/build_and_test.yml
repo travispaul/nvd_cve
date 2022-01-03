@@ -3,7 +3,7 @@ on:
   pull_request:
     types: ['edited', 'opened', 'reopened', 'synchronize']
   push:
-    branches: ['main', 'release-**']
+    branches: ['main']
 
 jobs:
   build_matrix:

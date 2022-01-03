@@ -1,0 +1,50 @@
+name: Build Release Artifacts
+on:
+  push:
+    branches: ['release-**']
+
+# Not able to use actions-rs/toolchain (yet?)
+# https://github.com/actions-rs/toolchain/pull/62
+jobs:
+  build_matrix:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [linux, macos]
+        include:
+          - name: linux
+            os: ubuntu-20.04
+          - name: macos
+            os: macOS-10.15
+          # XXX
+          # Windows build currently failing
+          # LINK : fatal error LNK1181: cannot open input file 'sqlite3.lib'
+          # - name: windows
+          #   os: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Stable with rustfmt and clippy
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Build Release
+        run: |
+          cargo build --release
+          VERSION=v$(./target/release/nvd_cve -V | cut -d' ' -f2)
+          echo "VERSION: $VERSION"
+          TARGET=$(rustc -vV | sed -n 's|host: ||p')
+          echo "TARGET: $TARGET"
+          gzip -c target/release/nvd_cve >> nvd_cve.$VERSION.$TARGET.gz
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GH_PAT}}
+        with:
+          tag_name: ${{env.VERSION}}
+          generate_release_notes: true
+          files: |
+            nvd_cve*gz

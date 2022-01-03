@@ -284,7 +284,7 @@ impl SqliteCache {
         let mut unecessary = 0;
 
         // We can't borrow conn immutably for the prepared statement AND mutably for a transaction
-        // new_checked allows us to use an immutable borrow of the connection
+        // Transaction::new_unchecked() allows for an immutable borrow of the connection
         // see: https://github.com/rusqlite/rusqlite/pull/693
         let tx = Transaction::new_unchecked(&conn, TransactionBehavior::Exclusive)?;
 
