@@ -1,0 +1,2 @@
+# Preserve original line endings from files fetched from NIST
+tests/files/* binary

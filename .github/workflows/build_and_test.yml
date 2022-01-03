@@ -1,0 +1,37 @@
+name: Build and Run Tests
+on:
+  pull_request:
+    types: ['edited', 'opened', 'reopened', 'synchronize']
+  push:
+    branches: ['main', 'release-**']
+
+jobs:
+  build_matrix:
+    name: Run tests for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        name: [linux, windows, macos]
+        include:
+          - name: linux
+            os: ubuntu-20.04
+          - name: windows
+            os: windows-2019
+          - name: macos
+            os: macOS-10.15
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Stable with rustfmt and clippy
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: clippy
+
+      - name: Run tests
+        env:
+          RUST_BACKTRACE: full
+        run: |
+          cargo test
+          cargo clippy
