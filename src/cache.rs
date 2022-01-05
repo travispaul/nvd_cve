@@ -9,7 +9,7 @@ use std::fmt;
 use std::path::PathBuf;
 use std::{env, fs, io};
 
-/// Configuration details about how to sync remote feeds to a local SQLite database.
+/// Configuration details about how to sync remote feeds to a local cache.
 #[derive(Debug)]
 pub struct CacheConfig {
     pub url: String,
@@ -97,6 +97,7 @@ impl fmt::Display for CacheConfig {
     }
 }
 
+/// Errors related to Cache
 #[derive(Debug)]
 pub enum CacheError {
     RusqliteError(rusqlite::Error),
@@ -136,6 +137,7 @@ impl From<serde_json::Error> for CacheError {
     }
 }
 
+/// Create Metafile and CVE tables for local cache
 fn create_schema(path: &str) -> Result<(), CacheError> {
     let mut db_path = PathBuf::from(&path);
     db_path.pop();
@@ -256,7 +258,7 @@ fn update_metafile(config: &CacheConfig, feed: &str, metafile: &Metafile) -> Res
     }
 }
 
-// Update or insert CVEs from a CVEContainer
+/// Update or insert CVEs from a CVEContainer
 fn update_cves(
     config: &CacheConfig,
     cve_feed: &[CveContainer],
@@ -327,6 +329,7 @@ fn update_cves(
     }
 }
 
+/// Sync remote feeds to local cache
 pub fn sync_blocking<C: BlockingHttpClient>(
     config: &CacheConfig,
     client: C,
@@ -419,6 +422,7 @@ pub fn sync_blocking<C: BlockingHttpClient>(
     Ok(())
 }
 
+/// Search local cache by a CVE ID
 pub fn search_by_id(config: &CacheConfig, cve: &str) -> Result<Cve, CacheError> {
     let conn = Connection::open(&config.db)?;
 
@@ -439,6 +443,7 @@ pub fn search_by_id(config: &CacheConfig, cve: &str) -> Result<Cve, CacheError> 
     }
 }
 
+/// Search local cache by a text string
 pub fn search_description(config: &CacheConfig, text: &str) -> Result<usize, CacheError> {
     let conn = Connection::open(&config.db)?;
 

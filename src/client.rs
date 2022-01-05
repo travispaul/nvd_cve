@@ -38,6 +38,7 @@ impl From<std::io::Error> for HttpError {
     }
 }
 
+/// Trait for fetching CVE feed and Metafiles
 pub trait BlockingHttpClient {
     fn new<S: Into<String>>(
         base_url: S,
@@ -78,12 +79,16 @@ impl BlockingHttpClient for ReqwestBlockingClient {
             client,
         }
     }
+
+    /// Fetches a Metafile text file
+    // XXX Should this parse the Metafile too?
     fn get_metafile(&self, name: &str) -> Result<String, HttpError> {
         let filename = format!("nvdcve-1.1-{}.meta", name);
         let url = Url::parse(self.base_url.as_str())?.join(filename.as_str())?;
         Ok(self.client.get(url).send()?.text()?)
     }
 
+    /// Fetches a GZipped CVE JSON feed
     fn get_feed(&self, name: &str) -> Result<CveFeed, HttpError> {
         let filename = format!("nvdcve-1.1-{}.json.gz", name);
 

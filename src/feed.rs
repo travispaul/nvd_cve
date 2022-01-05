@@ -45,6 +45,7 @@ impl From<ParseIntError> for MetafileError {
     }
 }
 
+/// Metafile describing a CVE JSON feed
 #[derive(Debug)]
 pub struct Metafile {
     /// Last modified date of JSON feed.
@@ -104,6 +105,7 @@ impl Metafile {
         })
     }
 
+    /// Parse date from either a metafile or from a record in the local cache
     // XXXX Make generic param str or String
     pub fn parse_datetime(datetime: &str) -> NaiveDateTime {
         match DateTime::parse_from_rfc3339(datetime) {
@@ -118,6 +120,7 @@ impl Metafile {
         }
     }
 
+    /// Format NaiveDate to a string for storing in local cache
     pub fn format_last_modified_date(&self) -> String {
         self.last_modified_date
             .format("%Y-%m-%dT%H:%M:%S")
