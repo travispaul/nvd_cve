@@ -52,15 +52,19 @@ pub fn search(matches: &ArgMatches) {
 
     if let Some(text) = matches.value_of("text") {
         match search_description(&config, text) {
-            Ok(count) => {
-                if count == 0 {
+            Ok(cves) => {
+                if cves.len() == 0 {
                     eprintln!("No results found");
                     std::process::exit(1);
+                } else {
+                    for cve in cves {
+                        println!("{}", cve);
+                    }
                 }
             }
             Err(error) => {
                 eprintln!("Fatal Error: {:?}", error);
-                std::process::exit(1);
+                std::process::exit(2);
             }
         }
     } else if let Some(cve) = matches.value_of("CVE") {
@@ -68,7 +72,7 @@ pub fn search(matches: &ArgMatches) {
             Ok(cve_result) => println!("{}", serde_json::to_string_pretty(&cve_result).unwrap()),
             Err(error) => {
                 eprintln!("Fatal Error: {:?}", error);
-                std::process::exit(1);
+                std::process::exit(3);
             }
         }
     }
