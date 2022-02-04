@@ -9,13 +9,28 @@ use std::fmt;
 use std::path::PathBuf;
 use std::{env, fs, io};
 
+const SCHEMA_VERSION: &str = "0.1.0";
+
 /// Configuration details about how to sync remote feeds to a local cache.
 #[derive(Debug)]
 pub struct CacheConfig {
+    /// A URL where  NIST CVE 1.1  feeds can be found. This can be your own mirror but it must have the
+    /// same file and directory structure as served by the official NIST feeds.
     pub url: String,
+
+    /// All feeds that are to be synced. They are synced in the order provided so if you intend to
+    /// sync the``recent`` or ``modified`` feeds, they should always be provided last or else it is
+    /// possible to overwrite a newer ``modified`` version of a CVE record with stale data.
     pub feeds: Vec<String>,
+
+    /// Path to the SQLite database used to store the synced CVE data.
     pub db: String,
+
+    /// If ``True`` the status of the sync process will be displayed.
     pub show_progress: bool,
+
+    /// If ``True`` the ``last_modified_date`` provided by the feed's ``Metafile`` will be ignored
+    /// and the feed will always be fetched.
     pub force_update: bool,
 }
 
@@ -63,7 +78,7 @@ impl CacheConfig {
         fallback.to_str().unwrap().to_string()
     }
 
-    /// Create a new CacheConfig with some sane defaults.
+    /// Create a new ``CacheConfig`` with some reasonable defaults.
     pub fn new() -> Self {
         let mut feeds: Vec<String> = (2002..2022).into_iter().map(|x| x.to_string()).collect();
         feeds.push("recent".to_string());
@@ -137,7 +152,7 @@ impl From<serde_json::Error> for CacheError {
     }
 }
 
-/// Create Metafile and CVE tables for local cache
+/// Create ``Metafile`` and CVE tables for local cache
 fn create_schema(path: &str) -> Result<(), CacheError> {
     let mut db_path = PathBuf::from(&path);
     db_path.pop();
@@ -171,6 +186,23 @@ fn create_schema(path: &str) -> Result<(), CacheError> {
         )?;
     }
 
+    if !tbl_stmt.exists(["migration"])? {
+        conn.execute(
+            "CREATE TABLE migration (
+                schema_version VARCHAR PRIMARY KEY,
+                app_version VARCHAR NOT NULL,
+                status INTEGER NOT NULL)",
+            [],
+        )?;
+        conn.execute(
+            "INSERT into migration (schema_version, app_version, status) values (?1, ?2, 0)",
+            [
+                SCHEMA_VERSION,
+                option_env!("CARGO_PKG_VERSION").unwrap_or("?.?.?"),
+            ],
+        )?;
+    }
+
     tbl_stmt.finalize()?;
 
     match conn.close() {
@@ -179,7 +211,7 @@ fn create_schema(path: &str) -> Result<(), CacheError> {
     }
 }
 
-/// Get all cached Metafiles
+/// Get all cached ``Metafiles``
 fn get_metafiles(config: &CacheConfig) -> Result<Vec<Feed>, CacheError> {
     let conn = Connection::open(&config.db)?;
 
@@ -219,7 +251,7 @@ fn get_metafiles(config: &CacheConfig) -> Result<Vec<Feed>, CacheError> {
     }
 }
 
-/// Update or insert Metafile
+/// Update or insert ``Metafile``
 fn update_metafile(
     config: &CacheConfig,
     feed: &str,
@@ -262,7 +294,7 @@ fn update_metafile(
     }
 }
 
-/// Update or insert CVEs from a CVEContainer
+/// Update or insert CVEs from a ``CVEContainer``
 fn update_cves(
     config: &CacheConfig,
     cve_feed: &[CveContainer],
@@ -333,7 +365,22 @@ fn update_cves(
     }
 }
 
-/// Sync remote feeds to local cache
+/// Syncs the remote feeds to the local cache using the provided ``BlockingHttpClient``
+///
+/// ## Example:
+/// ```
+/// use nvd_cve::cache::{CacheConfig, sync_blocking};
+/// use nvd_cve::client::{ReqwestBlockingClient, BlockingHttpClient};
+///
+/// let mut config = CacheConfig::new();
+///
+/// let client = ReqwestBlockingClient::new(&config.url, None, None, None);
+///
+/// if let Err(error) = sync_blocking(&config, client) {
+///     eprintln!("Fatal Error while syncing feeds: {:?}", error);
+///     std::process::exit(1);
+/// }
+/// ```
 pub fn sync_blocking<C: BlockingHttpClient>(
     config: &CacheConfig,
     client: C,
@@ -426,7 +473,17 @@ pub fn sync_blocking<C: BlockingHttpClient>(
     Ok(())
 }
 
-/// Search local cache by a CVE ID
+/// Returns the full CVE object that is extracted from the feed for the provided CVE ID.
+///
+/// ## Example:
+/// ```
+/// use nvd_cve::cache::{CacheConfig, search_by_id};
+///
+/// let config = CacheConfig::new();
+///
+/// let cve_result = search_by_id(&config, "CVE-2019-18254")?;
+/// println!("{:?}", &cve_result);
+/// ```
 pub fn search_by_id(config: &CacheConfig, cve: &str) -> Result<Cve, CacheError> {
     let conn = Connection::open(&config.db)?;
 
@@ -447,11 +504,23 @@ pub fn search_by_id(config: &CacheConfig, cve: &str) -> Result<Cve, CacheError> 
     }
 }
 
-/// Search local cache by a text string
-pub fn search_description(config: &CacheConfig, text: &str) -> Result<usize, CacheError> {
-    let conn = Connection::open(&config.db)?;
+/// Searches all local CVE descriptions for the provided ``text`` string, and returns a Vec of CVE ID Strings for any matches.
+///
+/// ## Example:
+/// ```
+/// use nvd_cve::cache::{CacheConfig, search_description};
+///
+/// let config = CacheConfig::new();
+///
+/// if let Ok(cves) = search_description(&config, "implanted cardiac device") {
+///     for cve_id in cves {
+///         println!("{}", cve_id);
+///     }
+/// }
+/// ```
 
-    let mut count = 0;
+pub fn search_description(config: &CacheConfig, text: &str) -> Result<Vec<String>, CacheError> {
+    let conn = Connection::open(&config.db)?;
 
     let mut stmt = conn.prepare("SELECT id FROM cve where description like '%' || ?1 || '%'")?;
 
@@ -460,15 +529,16 @@ pub fn search_description(config: &CacheConfig, text: &str) -> Result<usize, Cac
         Ok(id)
     })?;
 
+    let mut cve_list = vec![];
+
     for cve in cves {
-        count += 1;
-        println!("{}", cve?.as_str());
+        cve_list.push(cve?);
     }
 
     stmt.finalize()?;
 
     match conn.close() {
-        Ok(_) => Ok(count),
+        Ok(_) => Ok(cve_list),
         Err((_, error)) => Err(CacheError::RusqliteError(error)),
     }
 }
