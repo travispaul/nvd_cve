@@ -185,15 +185,15 @@ fn get_metafiles(config: &CacheConfig) -> Result<Vec<Feed>, CacheError> {
 
     let mut stmt = conn.prepare("SELECT * FROM metafile where feed=?1")?;
 
-    let cached_feeds = config.feeds
+    let cached_feeds = config
+        .feeds
         .iter()
         .map(|name| {
             let meta = stmt
                 .query_row([&name], |row| {
                     let last_modified_row: String =
                         row.get("last_modified_date").unwrap_or_default();
-                    let last_modified_date =
-                        Metafile::parse_datetime(last_modified_row.as_str());
+                    let last_modified_date = Metafile::parse_datetime(last_modified_row.as_str());
                     let metafile = Metafile {
                         last_modified_date,
                         size: row.get("size").unwrap_or_default(),
@@ -220,7 +220,11 @@ fn get_metafiles(config: &CacheConfig) -> Result<Vec<Feed>, CacheError> {
 }
 
 /// Update or insert Metafile
-fn update_metafile(config: &CacheConfig, feed: &str, metafile: &Metafile) -> Result<(), CacheError> {
+fn update_metafile(
+    config: &CacheConfig,
+    feed: &str,
+    metafile: &Metafile,
+) -> Result<(), CacheError> {
     let conn = Connection::open(&config.db)?;
     let upsert_sql = "
         insert into
@@ -244,13 +248,13 @@ fn update_metafile(config: &CacheConfig, feed: &str, metafile: &Metafile) -> Res
 
     let mut stmt = conn.prepare(upsert_sql)?;
     stmt.insert(params![
-            feed,
-            metafile.format_last_modified_date(),
-            metafile.size,
-            metafile.zip_size,
-            metafile.gz_size,
-            metafile.sha256
-        ])?;
+        feed,
+        metafile.format_last_modified_date(),
+        metafile.size,
+        metafile.zip_size,
+        metafile.gz_size,
+        metafile.sha256
+    ])?;
     stmt.finalize()?;
     match conn.close() {
         Ok(_) => Ok(()),
@@ -292,7 +296,7 @@ fn update_cves(
 
         if let Some(metafile_datetime) = last_modified_date {
             if let Ok(cve_datetime) =
-            NaiveDateTime::parse_from_str(&cve.last_modified_date, "%Y-%m-%dT%H:%M%Z")
+                NaiveDateTime::parse_from_str(&cve.last_modified_date, "%Y-%m-%dT%H:%M%Z")
             {
                 if cve_datetime > *metafile_datetime {
                     skip = true;
@@ -312,10 +316,10 @@ fn update_cves(
                 }
             }
             stmt.insert(params![
-                    cve.cve.cve_data_meta.id,
-                    description,
-                    serde_json::to_string(&cve.cve).unwrap_or_else(|_| { "{}".to_string() })
-                ])?;
+                cve.cve.cve_data_meta.id,
+                description,
+                serde_json::to_string(&cve.cve).unwrap_or_else(|_| { "{}".to_string() })
+            ])?;
         }
     }
 
@@ -449,8 +453,7 @@ pub fn search_description(config: &CacheConfig, text: &str) -> Result<usize, Cac
 
     let mut count = 0;
 
-    let mut stmt =
-        conn.prepare("SELECT id FROM cve where description like '%' || ?1 || '%'")?;
+    let mut stmt = conn.prepare("SELECT id FROM cve where description like '%' || ?1 || '%'")?;
 
     let cves = stmt.query_map(params![text], |row| {
         let id: String = row.get("id")?;
