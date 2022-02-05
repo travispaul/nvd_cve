@@ -368,7 +368,7 @@ fn update_cves(
 /// Syncs the remote feeds to the local cache using the provided ``BlockingHttpClient``
 ///
 /// ## Example:
-/// ```
+/// ```no_run
 /// use nvd_cve::cache::{CacheConfig, sync_blocking};
 /// use nvd_cve::client::{ReqwestBlockingClient, BlockingHttpClient};
 ///
@@ -476,7 +476,7 @@ pub fn sync_blocking<C: BlockingHttpClient>(
 /// Returns the full CVE object that is extracted from the feed for the provided CVE ID.
 ///
 /// ## Example:
-/// ```
+/// ```no_run
 /// use nvd_cve::cache::{CacheConfig, search_by_id};
 ///
 /// let config = CacheConfig::new();
@@ -507,7 +507,7 @@ pub fn search_by_id(config: &CacheConfig, cve: &str) -> Result<Cve, CacheError> 
 /// Searches all local CVE descriptions for the provided ``text`` string, and returns a Vec of CVE ID Strings for any matches.
 ///
 /// ## Example:
-/// ```
+/// ```no_run
 /// use nvd_cve::cache::{CacheConfig, search_description};
 ///
 /// let config = CacheConfig::new();
