@@ -3,8 +3,8 @@
 
 [![Build and Run Tests](https://github.com/travispaul/nvd_cve/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/travispaul/nvd_cve/actions/workflows/build_and_test.yml)
 
-`nvd_cve` is a command line utility and Rust module for syncing and searching the NIST National Vulnerability Database.
-It's functionality attempts to be useful for vulnerability management tasks and automation efforts that utilize the CVE
+`nvd_cve` is a command-line utility and Rust module for syncing and searching the NIST National Vulnerability Database.
+Its functionality attempts to be useful for vulnerability management tasks and automation efforts that utilize the CVE
 data. A local cache can also be useful in event that the NIST NVD website or API is unreachable.
 
 ## Usage
@@ -31,7 +31,7 @@ SUBCOMMANDS:
 
 #### 🔃 Sync
 
-Before you can search for CVEs you first need to perform a `sync` which will pull the datafeeds and build a local cache in SQLite.
+Before you can search for CVEs you should perform a `sync` which will pull the data feeds and build a local cache in SQLite.
 
 ```
 Sync CVE feeds to local database
