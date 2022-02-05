@@ -2,6 +2,12 @@
 name = "nvd_cve"
 version = "0.1.0"
 edition = "2021"
+authors = ["Travis Paul <Tr@visPaul.me>"]
+license = "BSD-2-Clause"
+keywords = ["CVE", "NIST", "vulnerability"]
+categories = ["command-line-utilities", "caching"]
+readme = "README.md"
+homepage = "https://github.com/travispaul/nvd_cve"
 description = "Search for CVEs against a local cached copy of NIST National Vulnerability Database (NVD)."
 
 [dependencies]
@@ -17,7 +23,6 @@ chrono = "0.4"
 humansize = "1.1"
 log = "0.4"
 env_logger = "0.9"
-
 
 [target.'cfg(unix)'.dependencies]
 rusqlite = { version = "0.26" }

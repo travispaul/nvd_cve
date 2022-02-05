@@ -1,0 +1,221 @@
+.Dd Feb 4, 2022
+.Dt NVD_CVE 1
+.Os
+.Sh NAME
+.Nm nvd_cve
+.Nd Search for CVEs against a local cached copy of NIST National Vulnerability Database (NVD).
+.Sh SYNOPSIS
+.Nm
+.Op Fl h
+.Op Fl V
+.Nm
+.Cm sync
+.Op Fl f
+.Op Fl h
+.Op Fl n
+.Op Fl s
+.Op Fl V
+.Op Fl d Ar FILE
+.Op Fl l Ar LIST
+.Op Fl u Ar URL
+.Nm
+.Cm search
+.Op Fl h
+.Op Fl V
+.Op Fl d Ar FILE
+.Op Fl t Ar TEXT
+.Op Ar CVE-ID  Ns
+.Sh DESCRIPTION
+.Nm
+is a command line utility and Rust module for syncing and searching the NIST National Vulnerability Database.
+It's functionality attempts to be useful for vulnerability management tasks and automation efforts that utilize the CVE
+data. A local cache can also be useful in event that the NIST NVD website or API is unreachable.
+.El
+.Ss Environment Variables
+.Pp
+The following environment variables impact
+.Nm
+behavior:
+.Bl -tag -width 2n
+.It Sy XDG_CACHE_HOME
+Per the XDG Base Directory Specification, this environment variable "defines the base directory relative to which user
+specific non-essential data files should be stored."
+If set, it will be honored and the SQLite database containing the cached CVE feed data will be stored in a subdirectory
+named
+.Sy nvd.
+All path components will attempt to be created if they do not exist.
+.It Sy HOME
+If the
+.XGD_CACHE_HOME
+environment variable is not set or empty,
+.Sy $HOME/.cache
+will be used as a default. A subdirectory named
+.Sy nvd
+will be created and will store the SQLite database containing the cached CVE feed data.
+All path components will attempt to be created if they do not exist.
+.It Sy RUST_LOG
+When the
+.Fl V
+flag is used to enabled verbose output, this environment variable configures the log level.
+It can be set to one of:
+.Sy error , warn , info , debug ,
+or
+.Sy trace.
+.It Sy RUST_BACKTRACE
+Set this to any value except
+.Sy 0
+to generate a backtrace if an error occurs. If you are submitting a bug report, please set this and include it
+in the report.
+.Sh SUBCOMMANDS
+.Bl -tag -width 2n
+.It Xo
+.Nm
+.Op Fl h
+.Xc
+.Pp
+Displays help message.
+.It Xo
+.Nm
+.Op Fl V
+.Xc
+.Pp
+Displays version information.
+.It Xo
+.Nm
+.Cm sync
+.Op Fl fhnsV
+.Op Fl d Ar FILE
+.Op Fl l Ar LIST
+.Op Fl u Ar URL
+.Xc
+.Pp
+Syncs CVE feed data from remote feeds into a local SQLite database. When fetching feeds, the external metafiles are
+consulted to determine if the entire feed needs to be downloaded and if local CVE details need to be updated.
+.Bl -tag -width indent
+.It Fl f
+Ignore any existing Metafiles and their
+.Sy lastModifiedDate
+value, forcing an update of all feeds.
+.It Fl h
+Show help information for this subcommand.
+.It Fl n
+Do not show the progress bar when syncing feed.
+.It Fl s
+Show the default configuration values and exit.
+.It Fl V
+Show the version information and exit.
+.It Fl d Ar FILE
+Sets the absolute path to use for the SQLite database.
+.It Fl l Ar LIST
+A comma separated list of CVE feeds to sync, defaults to: all known feeds
+.It Fl u Ar URL
+URL to use for fetching feeds, defaults to: https://nvd.nist.gov/feeds/json/cve/1.1
+.El
+.It Xo
+.Nm
+.Cm search
+.Op Fl hV
+.Op Fl d Ar FILE
+.Op Fl t Ar TEXT
+.Ar CVE-ID
+.Xc
+.Pp
+Searches the local cache by either a
+.Sy CVE-ID,
+which returns all the local CVE data available, or by arbitrary
+.Sy TEXT
+which returns a list of any matching CVEs by their ID.
+.Bl -tag -width indent
+.It Fl h
+Show help information for this subcommand.
+.It Fl V
+Show the version information and exit.
+.It Fl d Ar FILE
+Sets the absolute path to use for the SQLite database.
+.It Fl t Ar TEXT
+A string of text used to search the description of all local CVEs.
+.El
+.Sh EXAMPLES
+.Bl -tag -width 0n
+.Pp
+Sync all the available feeds locally. You should run this once before attempting
+to search. It may take a couple of minutes to build the database the first time but subsequent runs will be faster
+as only data that has been updated will be fetched and synced.
+.Bd -literal
+.Li $ Ic nvd_cve sync
+[Feed: 2013] Fetching feed (2.34 MB)   [========--------]  50%
+.Ed
+.Pp
+Obtain the CVE details by a specific CVE-ID:
+.Bd -literal
+.Li $ Ic nvd_cve search CVE-2019-12780
+{
+  "data_type": "CVE",
+  "data_format": "MITRE",
+  "data_version": "4.0",
+  "cve_data_meta": {
+    "id": "CVE-2019-12780",
+    "assigner": "cve@mitre.org"
+  },
+  "problem_type": {
+    "problem_type_data": [
+      {
+        "description": [
+          {
+            "lang": "en",
+            "value": "CWE-78"
+          }
+        ]
+      }
+    ]
+  },
+  "references": {
+    "reference_data": [
+      {
+        "url": "https://www.exploit-db.com/exploits/46436",
+        "name": "https://www.exploit-db.com/exploits/46436",
+        "ref_source": "MISC",
+        "tags": [
+          "Exploit",
+          "Third Party Advisory",
+          "VDB Entry"
+        ]
+      }
+    ]
+  },
+  "description": {
+    "description_data": [
+      {
+        "lang": "en",
+        "value": "The Belkin Wemo Enabled Crock-Pot allows command injection in the Wemo UPnP API via the SmartDevURL argument to the SetSmartDevInfo action. A simple POST request to /upnp/control/basicevent1 can allow an attacker to execute commands without authentication."
+      }
+    ]
+  }
+}
+.Ed
+.Pp
+Sync only the 2022, Recent, and Modified feeds, with no progress bar:
+.Bd -literal
+.Li $ Ic nvd_cve sync -l 2022,recent,modified -n
+.Ed
+.Pp
+Search all CVE's descriptions for the term "insulin pump"
+.Bd -literal
+.Li $ Ic nvd_cve search -t "insulin pump"
+CVE-2011-3386
+CVE-2018-10634
+CVE-2018-14781
+CVE-2019-10964
+CVE-2020-10627
+CVE-2020-27256
+CVE-2020-27258
+CVE-2020-27264
+CVE-2020-27266
+CVE-2020-27268
+CVE-2020-27269
+CVE-2020-27270
+CVE-2020-27272
+CVE-2020-27276
+.Ed
+.Sh EXIT STATUS
+.Ex -std

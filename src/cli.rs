@@ -53,7 +53,7 @@ pub fn search(matches: &ArgMatches) {
     if let Some(text) = matches.value_of("text") {
         match search_description(&config, text) {
             Ok(cves) => {
-                if cves.is_empty()  {
+                if cves.is_empty() {
                     eprintln!("No results found");
                     std::process::exit(1);
                 } else {

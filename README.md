@@ -3,6 +3,10 @@
 
 [![Build and Run Tests](https://github.com/travispaul/nvd_cve/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/travispaul/nvd_cve/actions/workflows/build_and_test.yml)
 
+`nvd_cve` is a command line utility and Rust module for syncing and searching the NIST National Vulnerability Database.
+It's functionality attempts to be useful for vulnerability management tasks and automation efforts that utilize the CVE
+data. A local cache can also be useful in event that the NIST NVD website or API is unreachable.
+
 ## Usage
 
 ### Command line usage
@@ -21,7 +25,7 @@ FLAGS:
 
 SUBCOMMANDS:
     help      Prints this message or the help of the given subcommand(s)
-    search    Search for a CVE, trying the online API first and falling back to the local cache
+    search    Search for a CVE by ID in the local cache
     sync      Sync CVE feeds to local database
 ```
 
@@ -40,12 +44,12 @@ FLAGS:
     -h, --help            Prints help information
     -n, --no-progress     Don't show progress bar when syncing feeds
     -s, --show-default    Show default config values and exit
-        --version         Prints version information
-    -V, --verbose         Print verbose logs (Set level with RUST_LOG)
+    -V, --version         Prints version information
+    -v, --verbose         Print verbose logs (Set level with RUST_LOG)
 
 OPTIONS:
     -d, --db <FILE>       Path to SQLite database where CVE feed data will be stored
-    -l, --feeds <LIST>    Comma separate list of CVE feeds to fetch and sync, defaults to: all known feeds
+    -l, --feeds <LIST>    Comma separated list of CVE feeds to fetch and sync, defaults to: all known feeds
     -u, --url <URL>       URL to use for fetching feeds, defaults to: https://nvd.nist.gov/feeds/json/cve/1.1
 ```
 
@@ -71,14 +75,15 @@ $ ./target/debug/nvd_cve sync -u https://www.harmless.systems/mirror/nvd/feeds/j
 Search by a specific CVE or by some text within the description.
 
 ```
-Search for a CVE, trying the online API first and falling back to the local cache
+Search for a CVE by ID in the local cache
 
 USAGE:
-    nvd_cve search [OPTIONS] [CVE]
+    nvd_cve search [FLAGS] [OPTIONS] [CVE]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
+    -v, --verbose    Print verbose logs (Set level with RUST_LOG)
 
 OPTIONS:
     -d, --db <FILE>        Path to SQLite database where CVE feed data will be stored
@@ -144,3 +149,7 @@ Search within CVE descriptions:
 $ nvd_cve search -t Crock-Pot
 CVE-2019-12780
 ```
+
+### Module Usage
+
+See the [examples](examples/) directory for how to use the crate programmatically.

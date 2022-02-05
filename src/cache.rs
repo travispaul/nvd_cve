@@ -481,7 +481,7 @@ pub fn sync_blocking<C: BlockingHttpClient>(
 ///
 /// let config = CacheConfig::new();
 ///
-/// let cve_result = search_by_id(&config, "CVE-2019-18254")?;
+/// let cve_result = search_by_id(&config, "CVE-2019-18254").unwrap();
 /// println!("{:?}", &cve_result);
 /// ```
 pub fn search_by_id(config: &CacheConfig, cve: &str) -> Result<Cve, CacheError> {

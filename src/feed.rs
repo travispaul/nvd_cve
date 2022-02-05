@@ -106,7 +106,6 @@ impl Metafile {
     }
 
     /// Parse date from either a metafile or from a record in the local cache
-    // XXXX Make generic param str or String
     pub fn parse_datetime(datetime: &str) -> NaiveDateTime {
         match DateTime::parse_from_rfc3339(datetime) {
             Ok(parsed_dt) => parsed_dt.naive_utc(),

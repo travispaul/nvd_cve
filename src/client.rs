@@ -81,7 +81,6 @@ impl BlockingHttpClient for ReqwestBlockingClient {
     }
 
     /// Fetches a Metafile text file
-    // XXX Should this parse the Metafile too?
     fn get_metafile(&self, name: &str) -> Result<String, HttpError> {
         let filename = format!("nvdcve-1.1-{}.meta", name);
         let url = Url::parse(self.base_url.as_str())?.join(filename.as_str())?;
