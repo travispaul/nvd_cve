@@ -473,6 +473,39 @@ pub fn sync_blocking<C: BlockingHttpClient>(
     Ok(())
 }
 
+/// Returns all the CVEs available in the database.
+///
+/// ## Example:
+/// ```no_run
+/// use nvd_cve::cache::{CacheConfig, get_all};
+///
+/// let config = CacheConfig::new();
+///
+/// let all_cves = get_all(&config).unwrap();
+/// println!("{:?}", &all_cves);
+/// ```
+pub fn get_all(config: &CacheConfig) -> Result<Vec<Cve>, CacheError> {
+    let conn = Connection::open(&config.db)?;
+    let mut stmt = conn.prepare("SELECT * FROM cve")?;
+
+    let cves = stmt.query_map(params![], |row| {
+        let data: String = row.get("data")?;
+        Ok(data)
+    })?;
+
+    let mut cve_list = vec![];
+    for cve in cves {
+        let result: Cve = serde_json::from_str(cve?.as_str())?;
+        cve_list.push(result);
+    }
+    stmt.finalize()?;
+
+    match conn.close() {
+        Ok(_) => Ok(cve_list),
+        Err((_, error)) => Err(CacheError::RusqliteError(error)),
+    }
+}
+
 /// Returns the full CVE object that is extracted from the feed for the provided CVE ID.
 ///
 /// ## Example:
