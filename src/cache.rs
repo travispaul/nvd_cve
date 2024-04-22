@@ -80,7 +80,7 @@ impl CacheConfig {
 
     /// Create a new ``CacheConfig`` with some reasonable defaults.
     pub fn new() -> Self {
-        let mut feeds: Vec<String> = (2002..2022).into_iter().map(|x| x.to_string()).collect();
+        let mut feeds: Vec<String> = (2002..2022).map(|x| x.to_string()).collect();
         feeds.push("recent".to_string());
         feeds.push("modified".to_string());
         Self {
@@ -158,7 +158,7 @@ fn create_schema(path: &str) -> Result<(), CacheError> {
     db_path.pop();
     fs::create_dir_all(db_path)?;
 
-    let conn = Connection::open(&path)?;
+    let conn = Connection::open(path)?;
 
     let mut tbl_stmt =
         conn.prepare("SELECT name FROM sqlite_master where type = 'table' and name = ?;")?;
