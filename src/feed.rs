@@ -113,7 +113,9 @@ impl Metafile {
                 Ok(parsed_ndt) => parsed_ndt,
                 Err(_) => {
                     warn!("Failed parsing datetime: {:?}", datetime);
-                    NaiveDateTime::from_timestamp(0, 0)
+                    DateTime::from_timestamp(0, 0)
+                        .unwrap_or_default()
+                        .naive_utc()
                 }
             },
         }
