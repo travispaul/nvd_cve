@@ -158,7 +158,7 @@ fn create_schema(path: &str) -> Result<(), CacheError> {
     db_path.pop();
     fs::create_dir_all(db_path)?;
 
-    let conn = Connection::open(&path)?;
+    let conn = Connection::open(path)?;
 
     let mut tbl_stmt =
         conn.prepare("SELECT name FROM sqlite_master where type = 'table' and name = ?;")?;
