@@ -3,8 +3,6 @@ on:
   push:
     branches: ['release-**']
 
-# Not able to use actions-rs/toolchain (yet?)
-# https://github.com/actions-rs/toolchain/pull/62
 jobs:
   build_matrix:
     name: Build for ${{ matrix.os }}
@@ -14,14 +12,11 @@ jobs:
         name: [linux, macos]
         include:
           - name: linux
-            os: ubuntu-20.04
+            os: ubuntu-latest
           - name: macos
-            os: macOS-10.15
-          # XXX
-          # Windows build currently failing
-          # LINK : fatal error LNK1181: cannot open input file 'sqlite3.lib'
-          # - name: windows
-          #   os: windows-2019
+            os: macOS-latest
+          - name: windows
+            os: windows-latest
     steps:
       - uses: actions/checkout@v1
 
