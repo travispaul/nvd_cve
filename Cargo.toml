@@ -14,21 +14,21 @@ homepage = "https://github.com/travispaul/nvd_cve"
 description = "Search for CVEs against a local cached copy of NIST National Vulnerability Database (NVD)."
 
 [dependencies]
-home = "0.5.3"
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+home = "0.5"
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 flate2 = "1.0"
-url = "2.2"
+url = "2.5"
 progress = "0.2"
 clap = "2.34"
 chrono = "0.4"
 humansize = "1.1"
 log = "0.4"
-env_logger = "0.9"
+env_logger = "0.11"
 
 [target.'cfg(unix)'.dependencies]
-rusqlite = { version = "0.26" }
+rusqlite = { version = "0.31" }
 
 [target.'cfg(windows)'.dependencies]
-rusqlite = { version = "0.26", features = ["bundled"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
