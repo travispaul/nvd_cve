@@ -80,7 +80,7 @@ impl CacheConfig {
 
     /// Create a new ``CacheConfig`` with some reasonable defaults.
     pub fn new() -> Self {
-        let mut feeds: Vec<String> = (2002..=2024).into_iter().map(|x| x.to_string()).collect();
+        let mut feeds: Vec<String> = (2002..=2024).map(|x| x.to_string()).collect();
         feeds.push("recent".to_string());
         feeds.push("modified".to_string());
         Self {

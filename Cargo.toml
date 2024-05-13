@@ -1,8 +1,11 @@
 [package]
 name = "nvd_cve"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-authors = ["Travis Paul <Tr@visPaul.me>"]
+authors = [
+    "Travis Paul <Tr@visPaul.me>",
+    "Orhun Parmaksız <orhunparmaksiz@gmail.com>"
+]
 license = "BSD-2-Clause"
 keywords = ["CVE", "NIST", "vulnerability"]
 categories = ["command-line-utilities", "caching"]
