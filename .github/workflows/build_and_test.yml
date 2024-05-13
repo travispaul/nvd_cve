@@ -14,11 +14,11 @@ jobs:
         name: [linux, windows, macos]
         include:
           - name: linux
-            os: ubuntu-20.04
+            os: ubuntu-latest
           - name: windows
-            os: windows-2019
+            os: windows-latest
           - name: macos
-            os: macOS-10.15
+            os: macOS-latest
     steps:
       - uses: actions/checkout@v1
 
