@@ -10,7 +10,7 @@ license = "BSD-2-Clause"
 keywords = ["CVE", "NIST", "vulnerability"]
 categories = ["command-line-utilities", "caching"]
 readme = "README.md"
-homepage = "https://github.com/travispaul/nvd_cve"
+repository = "https://github.com/travispaul/nvd_cve"
 description = "Search for CVEs against a local cached copy of NIST National Vulnerability Database (NVD)."
 
 [dependencies]
