@@ -11,7 +11,7 @@ keywords = ["CVE", "NIST", "vulnerability"]
 categories = ["command-line-utilities", "caching"]
 readme = "README.md"
 repository = "https://github.com/travispaul/nvd_cve"
-description = "Search for CVEs against a local cached copy of NIST National Vulnerability Database (NVD), via the NVD 2.0 REST API."
+description = "Search for CVEs against a local cached copy of NIST National Vulnerability Database (NVD)"
 
 [dependencies]
 home = "0.5"
