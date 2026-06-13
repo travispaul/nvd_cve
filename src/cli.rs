@@ -1,7 +1,7 @@
 use clap::ArgMatches;
-use nvd_cve::cache::{search_by_id, CacheConfig};
-use nvd_cve::cache::{search_description, sync_blocking};
-use nvd_cve::client::{BlockingHttpClient, ReqwestBlockingClient};
+use nvd_cve::cache::{search_by_id, search_description, sync_blocking, CacheConfig};
+use nvd_cve::client::ReqwestBlockingClient;
+use nvd_cve::feed::Feed;
 
 pub fn sync(matches: &ArgMatches) {
     let mut config = CacheConfig::new();
@@ -11,12 +11,18 @@ pub fn sync(matches: &ArgMatches) {
         return;
     }
 
-    if let Some(url) = matches.value_of("url") {
-        config.url = String::from(url);
-    }
-
-    if let Some(feeds) = matches.value_of("feeds") {
-        config.feeds = feeds.split(',').map(|feed| feed.to_string()).collect();
+    if let Some(raw) = matches.value_of("feeds") {
+        let mut parsed = Vec::new();
+        for token in raw.split(',') {
+            match Feed::parse(token.trim()) {
+                Ok(mut feeds) => parsed.append(&mut feeds),
+                Err(err) => {
+                    eprintln!("Invalid --feeds token `{token}`: {err}");
+                    std::process::exit(2);
+                }
+            }
+        }
+        config.feeds = parsed;
     }
 
     if let Some(db) = matches.value_of("db") {
@@ -35,10 +41,21 @@ pub fn sync(matches: &ArgMatches) {
         env_logger::init();
     }
 
-    let client = ReqwestBlockingClient::new(&config.url, None, None, None);
+    let api_key = matches
+        .value_of("api_key")
+        .map(str::to_string)
+        .or_else(|| std::env::var("NVD_API_KEY").ok());
 
-    if let Err(error) = sync_blocking(&config, client) {
-        eprintln!("Fatal Error: {:?}", error);
+    let client = match ReqwestBlockingClient::new(api_key) {
+        Ok(c) => c,
+        Err(err) => {
+            eprintln!("Failed to build HTTP client: {err}");
+            std::process::exit(1);
+        }
+    };
+
+    if let Err(error) = sync_blocking(&config, &client) {
+        eprintln!("Fatal Error: {error}");
         std::process::exit(1);
     }
 }
@@ -58,12 +75,12 @@ pub fn search(matches: &ArgMatches) {
                     std::process::exit(1);
                 } else {
                     for cve in cves {
-                        println!("{}", cve);
+                        println!("{cve}");
                     }
                 }
             }
             Err(error) => {
-                eprintln!("Fatal Error: {:?}", error);
+                eprintln!("Fatal Error: {error}");
                 std::process::exit(2);
             }
         }
@@ -71,7 +88,7 @@ pub fn search(matches: &ArgMatches) {
         match search_by_id(&config, cve) {
             Ok(cve_result) => println!("{}", serde_json::to_string_pretty(&cve_result).unwrap()),
             Err(error) => {
-                eprintln!("Fatal Error: {:?}", error);
+                eprintln!("Fatal Error: {error}");
                 std::process::exit(3);
             }
         }
